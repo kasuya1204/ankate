@@ -1,0 +1,28 @@
+<form id="surveyForm">
+  <input type="text" name="name" placeholder="名前" required><br>
+  <input type="email" name="email" placeholder="メール" required><br>
+  <textarea name="comment" placeholder="コメント" required></textarea><br>
+  <button type="submit">送信</button>
+</form>
+
+<script>
+document.getElementById('surveyForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = new FormData(form);
+
+  fetch(`https://script.google.com/macros/s/AKfycbyoWrb5eUjqpeMIQtfJoh_y-mXpR4mWBpHD-pvnjOxddclXd8mjg9jZ07BlSG0bj5s2qw/exec`, {
+    method: 'POST',
+    body: new URLSearchParams(data)
+  })
+  .then(res => res.json())
+  .then(res => {
+    alert("送信されました！");
+    form.reset();
+  })
+  .catch(err => {
+    alert("エラーが発生しました");
+    console.error(err);
+  });
+});
+</script>
