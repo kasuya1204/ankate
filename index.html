@@ -37,27 +37,48 @@ button { padding: 8px 16px; font-size: 1em; }
 </form>
 
 <script>
-// ★GASのURLをここに貼り付ける
 const GAS_URL = "https://script.google.com/macros/s/AKfycby8qwz4PJgtCwA3c_seK6Qulf_rS5u5qUer6MpKaFVLp7inShArUOwRWky0s9KykyyF9A/exec";
 
 // URL末尾のパラメータ（例: ?12345）からコードを取得
 const params = new URLSearchParams(window.location.search);
 const code = [...params.keys()][0] || "";
 
-// ✅ アクセス時に記録
-fetch(GAS_URL, {
-  method: "POST",
-  body: JSON.stringify({
-    type: "access",
-    code: code,
-    ua: navigator.userAgent
+// 🔍 IPアドレスを外部APIから取得
+fetch("https://api.ipify.org?format=json")
+  .then(res => res.json())
+  .then(ipData => {
+    // 📍 GPS位置情報を取得
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        sendAccess(ipData.ip, pos.coords.latitude, pos.coords.longitude);
+      }, err => {
+        // 位置情報取得失敗時
+        sendAccess(ipData.ip, "", "");
+      });
+    } else {
+      sendAccess(ipData.ip, "", "");
+    }
   })
-});
+  .catch(() => sendAccess("", "", ""));
 
-// ✅ アンケート送信時
+// ✅ アクセス記録送信
+function sendAccess(ip, lat, lng) {
+  fetch(GAS_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      type: "access",
+      code: code,
+      ua: navigator.userAgent,
+      ip: ip,
+      lat: lat,
+      lng: lng
+    })
+  });
+}
+
+// ✅ アンケート送信
 document.getElementById("form").addEventListener("submit", async e => {
   e.preventDefault();
-
   const q1 = document.querySelector('input[name="q1"]:checked')?.value || "";
   const q2 = document.querySelector('input[name="q2"]:checked')?.value || "";
   const q3 = document.querySelector('textarea[name="q3"]').value || "";
